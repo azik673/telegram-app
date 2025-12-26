@@ -10,7 +10,9 @@ interface BuilderContextType {
   updateComponent: (id: string, updates: Partial<ComponentConfig>) => void;
   removeComponent: (id: string) => void;
   saveProject: () => void;
+  saveProject: () => void;
   loadProject: (id: string, autoCreate?: boolean) => void;
+  importProject: (config: AppConfig) => void;
 }
 
 const BuilderContext = createContext<BuilderContextType | undefined>(undefined);
@@ -50,6 +52,21 @@ export const BuilderProvider = ({ children }: { children: ReactNode }) => {
       savedApps.push({ ...newProject, updatedAt: new Date().toISOString() });
       localStorage.setItem('telegram_mini_apps', JSON.stringify(savedApps));
     }
+  };
+
+  const importProject = (config: AppConfig) => {
+    const savedApps = JSON.parse(localStorage.getItem('telegram_mini_apps') || '[]');
+    const existingIndex = savedApps.findIndex((app: AppConfig) => app.id === config.id);
+    
+    if (existingIndex >= 0) {
+      savedApps[existingIndex] = { ...config, updatedAt: new Date().toISOString() };
+    } else {
+      savedApps.push({ ...config, updatedAt: new Date().toISOString() });
+    }
+    
+    localStorage.setItem('telegram_mini_apps', JSON.stringify(savedApps));
+    setAppConfig(config);
+    alert('Project imported successfully!');
   };
 
   const selectComponent = (id: string | null) => {
@@ -113,7 +130,9 @@ export const BuilderProvider = ({ children }: { children: ReactNode }) => {
       updateComponent, 
       removeComponent,
       saveProject,
-      loadProject
+      saveProject,
+      loadProject,
+      importProject
     }}>
       {children}
     </BuilderContext.Provider>

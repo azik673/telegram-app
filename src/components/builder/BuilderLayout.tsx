@@ -3,13 +3,13 @@ import { useBuilder } from '../../context/BuilderContext';
 import MobilePreview from '../preview/MobilePreview';
 import PropertiesPanel from './PropertiesPanel';
 import ConnectModal from './ConnectModal';
-import { Type, Image as ImageIcon, Square, ArrowLeft, Save, Globe, ExternalLink } from 'lucide-react';
+import { Type, Image as ImageIcon, Square, ArrowLeft, Save, Globe, ExternalLink, Download } from 'lucide-react';
 import { Link, useParams } from 'react-router-dom';
 import type { ComponentType } from '../../types/builder';
 
 const BuilderLayout = () => {
   const { id } = useParams();
-  const { addComponent, saveProject, loadProject } = useBuilder();
+  const { addComponent, saveProject, loadProject, appConfig } = useBuilder();
   const [isConnectModalOpen, setIsConnectModalOpen] = useState(false);
 
   useEffect(() => {
@@ -103,6 +103,27 @@ const BuilderLayout = () => {
                 title="Connect to Telegram"
               >
                 <Globe size={16} />
+              </button>
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(JSON.stringify(appConfig));
+                  alert('App code copied! Send this to your Telegram to import it.');
+                }}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  padding: '6px 12px',
+                  backgroundColor: 'var(--color-bg-tertiary)',
+                  color: 'var(--color-text-primary)',
+                  borderRadius: '4px',
+                  fontSize: '0.875rem',
+                  fontWeight: 500
+                }}
+                title="Export App Code"
+              >
+                <Download size={16} style={{ transform: 'rotate(180deg)' }} />
+                Export
               </button>
               <button
                 onClick={saveProject}

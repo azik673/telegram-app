@@ -1,12 +1,16 @@
 
 import { useState, useEffect } from 'react';
-import { Plus, Smartphone } from 'lucide-react';
+import { Plus, Smartphone, Download } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useBuilder } from '../context/BuilderContext';
 import type { AppConfig } from '../types/builder';
 
 const Dashboard = () => {
   const navigate = useNavigate();
+  const { importProject } = useBuilder();
   const [apps, setApps] = useState<AppConfig[]>([]);
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [importCode, setImportCode] = useState('');
 
   useEffect(() => {
     const savedApps = JSON.parse(localStorage.getItem('telegram_mini_apps') || '[]');
@@ -16,6 +20,23 @@ const Dashboard = () => {
   const handleCreateNew = () => {
     const newId = Math.random().toString(36).substr(2, 9);
     navigate(`/builder/${newId}`);
+  };
+
+  const handleImport = () => {
+    try {
+      const config = JSON.parse(importCode);
+      if (!config.id || !config.pages) {
+        throw new Error('Invalid project configuration');
+      }
+      importProject(config);
+      setShowImportModal(false);
+      setImportCode('');
+      // Refresh list
+      const savedApps = JSON.parse(localStorage.getItem('telegram_mini_apps') || '[]');
+      setApps(savedApps);
+    } catch (e) {
+      alert('Invalid code! Please copy the full code from the Export button.');
+    }
   };
 
   return (
@@ -30,24 +51,116 @@ const Dashboard = () => {
           <h1 style={{ fontSize: '2rem', fontWeight: 700, marginBottom: 'var(--spacing-xs)' }}>My Apps</h1>
           <p style={{ color: 'var(--color-text-secondary)' }}>Manage your Telegram Mini Apps</p>
         </div>
-        <button 
-          onClick={handleCreateNew}
-          style={{
-            backgroundColor: 'var(--color-accent)',
-            color: 'white',
-            padding: '0.75rem 1.5rem',
-            borderRadius: 'var(--radius-md)',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 'var(--spacing-sm)',
-            fontWeight: 600,
-            transition: 'var(--transition-fast)'
-          }}
-        >
-          <Plus size={20} />
-          Create New App
-        </button>
+        <div style={{ display: 'flex', gap: '12px' }}>
+          <button 
+            onClick={() => setShowImportModal(true)}
+            style={{
+              backgroundColor: 'var(--color-bg-tertiary)',
+              color: 'var(--color-text-primary)',
+              padding: '0.75rem 1.5rem',
+              borderRadius: 'var(--radius-md)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 'var(--spacing-sm)',
+              fontWeight: 600,
+              transition: 'var(--transition-fast)'
+            }}
+          >
+            <Download size={20} />
+            Import App
+          </button>
+          <button 
+            onClick={handleCreateNew}
+            style={{
+              backgroundColor: 'var(--color-accent)',
+              color: 'white',
+              padding: '0.75rem 1.5rem',
+              borderRadius: 'var(--radius-md)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 'var(--spacing-sm)',
+              fontWeight: 600,
+              transition: 'var(--transition-fast)'
+            }}
+          >
+            <Plus size={20} />
+            Create New App
+          </button>
+        </div>
       </header>
+
+      {showImportModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0,0,0,0.7)',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          zIndex: 1000
+        }}>
+          <div style={{
+            backgroundColor: 'var(--color-bg-secondary)',
+            padding: '24px',
+            borderRadius: '12px',
+            width: '100%',
+            maxWidth: '500px',
+            border: '1px solid var(--color-border)'
+          }}>
+            <h3 style={{ fontSize: '1.25rem', fontWeight: 600, marginBottom: '16px' }}>Import App</h3>
+            <p style={{ marginBottom: '12px', color: 'var(--color-text-secondary)' }}>
+              Paste the code you copied from the "Export" button on your computer.
+            </p>
+            <textarea
+              value={importCode}
+              onChange={(e) => setImportCode(e.target.value)}
+              placeholder='Paste code here...'
+              style={{
+                width: '100%',
+                height: '150px',
+                backgroundColor: 'var(--color-bg-tertiary)',
+                border: '1px solid var(--color-border)',
+                borderRadius: '8px',
+                padding: '12px',
+                color: 'white',
+                marginBottom: '16px',
+                fontFamily: 'monospace'
+              }}
+            />
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+              <button
+                onClick={() => setShowImportModal(false)}
+                style={{
+                  padding: '8px 16px',
+                  backgroundColor: 'transparent',
+                  color: 'var(--color-text-secondary)',
+                  border: 'none',
+                  cursor: 'pointer'
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleImport}
+                style={{
+                  padding: '8px 24px',
+                  backgroundColor: 'var(--color-accent)',
+                  color: 'white',
+                  borderRadius: '6px',
+                  border: 'none',
+                  fontWeight: 600,
+                  cursor: 'pointer'
+                }}
+              >
+                Import
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {apps.length === 0 ? (
         <div style={{
